@@ -1,0 +1,424 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1920, H = 1080, TOTAL = 51.5;
+const CUTS = [0, 5.6, 11.8, 15.5, 21.2, 29.2, 33.7, 39.3, 44.8, TOTAL];
+const FLASH = [11.8, 39.3, 44.8];
+const MASCOT = [[21.3, 23.3, 0], [37.3, 39.25, 1], [48.4, 50.6, 2]];
+window.TIMELINE = { TOTAL, CUTS };
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x04060c);
+scene.fog = new THREE.FogExp2(0x04060c, 0.045);
+const envTex = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(35, W / H, 0.1, 200);
+scene.add(camera);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.5, 0.5, 0.82);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const fader = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }));
+fader.position.z = -0.5; fader.renderOrder = 999; camera.add(fader);
+
+scene.add(new THREE.HemisphereLight(0x8fb4ff, 0x05070d, 0.18));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x0a0e18, roughness: 0.42, metalness: 0.3 }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -2.2; floor.receiveShadow = true; scene.add(floor);
+
+function spot(color = 0xffffff, intensity = 300, angle = 0.38) {
+  const s = new THREE.SpotLight(color, intensity, 40, angle, 0.55, 1.6);
+  s.castShadow = true; s.shadow.mapSize.set(1024, 1024); s.shadow.bias = -0.0004;
+  const beam = new THREE.Mesh(
+    new THREE.BufferGeometry(),
+    new THREE.ShaderMaterial({
+      uniforms: { color: { value: new THREE.Color(color) }, opacity: { value: 0.13 } },
+      vertexShader: 'varying vec2 vUv; varying float vFacing; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position,1.0); vec3 n = normalize(normalMatrix * normal); vFacing = abs(dot(n, normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }',
+      fragmentShader: 'uniform vec3 color; uniform float opacity; varying vec2 vUv; varying float vFacing; void main(){ float a = opacity * pow(vUv.y, 1.4) * pow(vFacing, 1.5); gl_FragColor = vec4(color, a); }',
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    }),
+  );
+  return { s, beam, angle, len: 0 };
+}
+function placeSpot(sp, from, to) {
+  sp.s.position.copy(from); sp.s.target.position.copy(to);
+  const dir = new THREE.Vector3().subVectors(to, from); const len = dir.length();
+  if (Math.abs(len - sp.len) > 0.01) { sp.beam.geometry.dispose(); sp.beam.geometry = new THREE.ConeGeometry(Math.tan(sp.angle) * len, len, 48, 1, true); sp.len = len; }
+  sp.beam.position.copy(from).add(dir.clone().normalize().multiplyScalar(len / 2));
+  sp.beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir.normalize());
+}
+
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+const SANS = '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif';
+const mat = {
+  blue: new THREE.MeshPhysicalMaterial({ color: 0x3b7cf0, emissive: 0x1a4fc0, emissiveIntensity: 0.35, roughness: 0.2, metalness: 0.2, clearcoat: 1, envMap: envTex, envMapIntensity: 0.8 }),
+  ink: new THREE.MeshPhysicalMaterial({ color: 0x0e121c, roughness: 0.3, metalness: 0.6, clearcoat: 1, envMap: envTex, envMapIntensity: 0.6 }),
+  gold: new THREE.MeshPhysicalMaterial({ color: 0xffc94d, roughness: 0.16, metalness: 1, clearcoat: 0.6, envMap: envTex, envMapIntensity: 2.4, emissive: 0x3a2400, emissiveIntensity: 0.4 }),
+  white: new THREE.MeshPhysicalMaterial({ color: 0xd9dee8, roughness: 0.35, clearcoat: 0.6, envMap: envTex, envMapIntensity: 0.5 }),
+  paper: new THREE.MeshStandardMaterial({ color: 0xf1ead9, roughness: 0.8 }),
+  paperIn: new THREE.MeshStandardMaterial({ color: 0xd9ccb2, roughness: 0.85, side: THREE.DoubleSide }),
+  red: new THREE.MeshPhysicalMaterial({ color: 0xff3b46, emissive: 0xff1a2a, emissiveIntensity: 0.45, roughness: 0.25, clearcoat: 1 }),
+  silhouette: new THREE.MeshStandardMaterial({ color: 0x0b0f18, roughness: 0.6, metalness: 0.2 }),
+  glowBlue: new THREE.MeshBasicMaterial({ color: 0x6aa0ff, toneMapped: false }),
+};
+const cast = (o) => { o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
+
+const cardFront = canvasTex(640, 896, (g, w, h) => {
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#0e121c'; g.textAlign = 'center';
+  g.font = `700 96px ${SANS}`; g.fillText('A', 70, 120); g.font = `80px ${SANS}`; g.fillText('♠', 70, 210);
+  g.save(); g.translate(w - 70, h - 120); g.rotate(Math.PI); g.font = `700 96px ${SANS}`; g.fillText('A', 0, 0); g.font = `80px ${SANS}`; g.fillText('♠', 0, 90); g.restore();
+  const grd = g.createLinearGradient(w * 0.3, h * 0.3, w * 0.7, h * 0.7); grd.addColorStop(0, '#8aa2c6'); grd.addColorStop(1, '#2e6fe0');
+  g.fillStyle = grd; g.font = `380px ${SANS}`; g.textBaseline = 'middle'; g.fillText('♠', w / 2, h / 2 + 10);
+});
+const cardBack = canvasTex(640, 896, (g, w, h) => {
+  g.fillStyle = '#1f4fb0'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(255,255,255,0.22)'; g.lineWidth = 3;
+  for (let i = -h; i < w + h; i += 36) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.stroke(); g.beginPath(); g.moveTo(i, h); g.lineTo(i + h, 0); g.stroke(); }
+  g.strokeStyle = '#fff'; g.lineWidth = 10; g.strokeRect(30, 30, w - 60, h - 60);
+  g.fillStyle = '#fff'; g.font = `700 64px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('ACE', w / 2, h / 2);
+});
+function makeCard() {
+  const grp = new THREE.Group();
+  grp.add(new THREE.Mesh(new RoundedBoxGeometry(1.6, 2.24, 0.04, 4, 0.09), mat.white));
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(1.48, 2.1), new THREE.MeshPhysicalMaterial({ map: cardFront, roughness: 0.3, clearcoat: 0.8, envMap: envTex, envMapIntensity: 0.4 })); f.position.z = 0.022;
+  const b = new THREE.Mesh(new THREE.PlaneGeometry(1.48, 2.1), new THREE.MeshPhysicalMaterial({ map: cardBack, roughness: 0.3, clearcoat: 0.8, envMap: envTex, envMapIntensity: 0.4 })); b.position.z = -0.022; b.rotation.y = Math.PI;
+  grp.add(f, b); return cast(grp);
+}
+const billTex = canvasTex(880, 400, (g, w, h) => {
+  const bg = g.createLinearGradient(0, 0, w, h); bg.addColorStop(0, '#e8f0e3'); bg.addColorStop(1, '#c9dcc1');
+  g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(47,74,42,0.5)'; g.lineWidth = 4; g.strokeRect(18, 18, w - 36, h - 36);
+  g.strokeStyle = 'rgba(47,74,42,0.18)'; g.lineWidth = 2;
+  for (let r = 40; r < 200; r += 14) { g.beginPath(); g.arc(w * 0.72, h / 2, r, 0, Math.PI * 2); g.stroke(); }
+  g.fillStyle = '#2f4a2a'; g.font = `700 34px ${SANS}`; g.fillText('ACE CLUB', 48, 72); g.fillText('ACE DOLLARS', 48, h - 48);
+  g.font = `700 120px ${SANS}`; g.fillText('?', w * 0.68, h / 2 + 42); g.font = `90px ${SANS}`; g.fillText('♠', w - 120, h - 40);
+});
+const billMat = new THREE.MeshStandardMaterial({ map: billTex, roughness: 0.6, side: THREE.DoubleSide });
+const makeBill = () => cast(new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.0, 0.01), billMat));
+
+let font;
+await new Promise((res) => new FontLoader().load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (f) => { font = f; res(); }));
+function text3d(str, size, material, depth = 0.35) {
+  const geo = new TextGeometry(str, { font, size, height: depth, curveSegments: 10, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.025, bevelSegments: 4 });
+  geo.computeBoundingBox(); geo.center(); return cast(new THREE.Mesh(geo, material));
+}
+function labelPlane(w, h, draw, pw = 2048) {
+  const tex = canvasTex(pw, Math.round(pw * h / w), draw);
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, alphaTest: 0.02 }));
+}
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const easeIO = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = (x) => { x = clamp(x); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+
+const dustGeo = new THREE.BufferGeometry();
+{ const r = rng(3); const pts = []; for (let i = 0; i < 900; i++) pts.push((r() - 0.5) * 22, r() * 9 - 2, (r() - 0.5) * 16); dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); }
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xa9c6ff, size: 0.035, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+scene.add(dust);
+
+const scenes = [];
+const S = (build) => { const g = new THREE.Group(); const upd = build(g); g.visible = false; scene.add(g); scenes.push({ g, upd }); };
+
+S((g) => { // 0 — a lone card in the dark
+  const card = makeCard(); card.position.set(0, 0.2, 0); g.add(card);
+  const sp = spot(0xdfe8ff, 170, 0.3); placeSpot(sp, new THREE.Vector3(0, 8, 2), new THREE.Vector3(0, -2.2, 0)); g.add(sp.s, sp.s.target, sp.beam);
+  return (t) => {
+    const on = ease((t - 0.3) / 1.6); sp.s.intensity = 170 * on; sp.beam.material.uniforms.opacity.value = 0.16 * on;
+    card.rotation.set(0.08, Math.PI - ease(t / 5) * (Math.PI - 0.35), 0.05 * Math.sin(t)); card.position.y = 0.2 + Math.sin(t * 1.2) * 0.08;
+    camera.position.set(0.6 - t * 0.12, 0.6, 9 - t * 0.45); camera.lookAt(0, 0.1, 0);
+  };
+});
+
+S((g) => { // 1 — someone in front of a room
+  const stage = new THREE.Mesh(new RoundedBoxGeometry(9, 0.6, 4, 3, 0.08), mat.ink); stage.position.set(0, -1.9, -6); g.add(cast(stage));
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(9, 0.04, 0.04), mat.glowBlue); edge.position.set(0, -1.6, -3.98); g.add(edge);
+  const podium = new THREE.Mesh(new RoundedBoxGeometry(1.3, 1.5, 0.8, 3, 0.08), mat.ink); podium.position.set(0.9, -0.85, -5.6); g.add(cast(podium));
+  const pStrip = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.02), mat.glowBlue); pStrip.position.set(0.9, -0.4, -5.19); g.add(pStrip);
+  const person = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 1.0, 8, 24), mat.silhouette); body.position.y = -0.55; person.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 32, 16), mat.silhouette); head.position.y = 0.45; person.add(head);
+  person.position.set(-0.7, 0, -6.2); g.add(cast(person));
+  const sp = spot(0xffffff, 260, 0.24); placeSpot(sp, new THREE.Vector3(-0.7, 7, -3), new THREE.Vector3(-0.7, -1.6, -6.2)); g.add(sp.s, sp.s.target, sp.beam);
+  const audience = [];
+  const r = rng(5);
+  for (let row = 0; row < 4; row++) for (let i = 0; i < 9; i++) {
+    const a = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.55, 6, 16), mat.silhouette); b.position.y = -0.2; a.add(b);
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.22, 24, 12), mat.silhouette); h.position.y = 0.42; a.add(h);
+    a.position.set((i - 4) * 1.05 + (row % 2) * 0.5 + (r() - 0.5) * 0.1, -1.55 + row * 0.12, 1.4 + row * 1.25);
+    a.scale.setScalar(0.95 + r() * 0.1); g.add(cast(a)); audience.push(a);
+  }
+  const rim = new THREE.PointLight(0x4f86ff, 30, 12); rim.position.set(0, 1.5, -4); g.add(rim);
+  const backdrop = labelPlane(18, 7, (c, w, h) => { const gr = c.createRadialGradient(w * 0.46, h * 0.55, 0, w * 0.46, h * 0.55, w * 0.5); gr.addColorStop(0, 'rgba(70,120,230,0.85)'); gr.addColorStop(0.45, 'rgba(25,50,120,0.6)'); gr.addColorStop(1, 'rgba(4,6,12,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }, 1024);
+  backdrop.position.set(0, 0.8, -9); g.add(backdrop);
+  const backKey = new THREE.DirectionalLight(0x7aa4ff, 1.6); backKey.position.set(0, 2, -9); backKey.target.position.set(0, -1, 6); g.add(backKey, backKey.target);
+  return (t, L) => {
+    const push = easeIO((t - (L - 1.8)) / 1.8);
+    sp.s.intensity = 260 + push * 400; sp.beam.material.uniforms.opacity.value = 0.14 + push * 0.12;
+    head.rotation.y = Math.sin(t * 0.9) * 0.3;
+    camera.position.set(0.3 + Math.sin(t * 0.2) * 0.3, -0.35 + push * 0.4, 8.0 - t * 0.3 - push * 5.0); camera.lookAt(-0.3, -0.2, -6);
+  };
+});
+
+S((g) => { // 2 — title drop
+  const title = text3d('ACE Pitch Day', 0.95, mat.blue, 0.45); title.position.set(0, 0.25, 0); g.add(title);
+  const sub = labelPlane(6.5, 0.6, (c, w, h) => { c.fillStyle = '#cfe0ff'; c.font = `600 ${h * 0.4}px ${SANS}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.letterSpacing = `${h * 0.08}px`; c.fillText('ACE CLUB  ·  INVESTOR SHOWCASE', w / 2, h / 2); });
+  sub.position.set(0, -0.8, 0.3); g.add(sub);
+  const shock = new THREE.Mesh(new THREE.TorusGeometry(1, 0.025, 8, 120), new THREE.MeshBasicMaterial({ color: 0x9fc2ff, transparent: true, toneMapped: false, blending: THREE.AdditiveBlending, depthWrite: false }));
+  shock.position.set(0, 0.25, -0.6); g.add(shock);
+  const r = rng(9);
+  const cards = Array.from({ length: 14 }, (_, i) => { const c = makeCard(); c.scale.setScalar(0.5); g.add(c); const side = i % 2 ? 1 : -1; const a = side * (0.55 + r() * 0.5) * Math.PI / 2 + (r() < 0.5 ? 0 : Math.PI); return { c, a, d: 5 + r() * 3, z: -4 - r() * 4, spin: (r() - 0.5) * 4, h: (r() - 0.5) * 1 }; });
+  const sp1 = spot(0x9fc2ff, 200, 0.3); placeSpot(sp1, new THREE.Vector3(-5, 7, 3), new THREE.Vector3(0, -2.2, 0)); g.add(sp1.s, sp1.s.target, sp1.beam);
+  const sp2 = spot(0xffffff, 200, 0.3); placeSpot(sp2, new THREE.Vector3(5, 7, 3), new THREE.Vector3(0, -2.2, 0)); g.add(sp2.s, sp2.s.target, sp2.beam);
+  return (t) => {
+    title.scale.setScalar(0.6 + 0.4 * back(t * 2.2)); title.rotation.x = (1 - ease(t * 1.6)) * -0.5;
+    sub.material.opacity = ease((t - 0.7) * 2);
+    shock.scale.setScalar(0.5 + ease(t * 1.2) * 9); shock.material.opacity = 1 - ease(t * 1.2);
+    cards.forEach(({ c, a, d, z, spin, h }) => { const e = ease(t * 1.1); c.position.set(Math.cos(a) * d * e, 0.25 + Math.sin(a) * d * 0.75 * e + h * e * 0.3, z); c.rotation.set(spin * e, spin * 0.7 * e + t * 0.3, a); });
+    const shake = Math.exp(-t * 6) * 0.12;
+    camera.position.set(Math.sin(t * 50) * shake, 0.6 + Math.cos(t * 43) * shake, 10.5 - ease(t / 3.7) * 0.8); camera.lookAt(0, 0.25, 0);
+  };
+});
+
+S((g) => { // 3 — three minutes
+  const digits = {};
+  const show = (s) => { for (const k in digits) digits[k].visible = false; if (!digits[s]) { digits[s] = text3d(s, 1.45, mat.white, 0.45); digits[s].position.set(0, 0.35, 0); g.add(digits[s]); } digits[s].visible = true; return digits[s]; };
+  ['3:00', '2:59', '2:58', '2:57', '2:56'].forEach(show);
+  const segs = [];
+  for (let i = 0; i < 60; i++) { const s = new THREE.Mesh(new RoundedBoxGeometry(0.08, 0.34, 0.12, 2, 0.03), mat.ink); const a = Math.PI / 2 - (i / 60) * Math.PI * 2; s.position.set(Math.cos(a) * 2.8, Math.sin(a) * 2.8 + 0.35, -0.4); s.rotation.z = a - Math.PI / 2; g.add(cast(s)); segs.push(s); }
+  const sp = spot(0xdfe8ff, 150, 0.32); placeSpot(sp, new THREE.Vector3(0, 8, 3), new THREE.Vector3(0, -2.2, 0)); g.add(sp.s, sp.s.target, sp.beam);
+  return (t) => {
+    const sec = Math.max(0, Math.floor(t - 1.2));
+    const d = show(['3:00', '2:59', '2:58', '2:57', '2:56'][Math.min(4, sec)]);
+    d.scale.setScalar(back(t * 1.8)); d.rotation.y = Math.sin(t * 0.7) * 0.2;
+    const fill = ease(t / 1.2);
+    segs.forEach((s, i) => { const lit = i / 60 < fill && i >= Math.min(60, sec * 1); s.material = lit ? mat.glowBlue : mat.ink; });
+    camera.position.set(Math.sin(t * 0.18) * 2.2, 0.5, 11.5 - t * 0.35); camera.lookAt(0, 0.1, 0);
+  };
+});
+
+S((g) => { // 4 — the secret envelope
+  const env = new THREE.Group(); g.add(env);
+  env.add(new THREE.Mesh(new RoundedBoxGeometry(3.4, 2.2, 0.06, 3, 0.03), mat.paperIn));
+  const bill = makeBill(); bill.position.set(0, -0.05, 0.07); env.add(bill);
+  const pocket = new THREE.Shape(); pocket.moveTo(-1.7, -1.1); pocket.lineTo(1.7, -1.1); pocket.lineTo(1.7, 0.45); pocket.lineTo(0, -0.35); pocket.lineTo(-1.7, 0.45); pocket.closePath();
+  const pm = new THREE.Mesh(new THREE.ExtrudeGeometry(pocket, { depth: 0.04, bevelEnabled: false }), mat.paper); pm.position.z = 0.1; env.add(pm);
+  const pivot = new THREE.Group(); pivot.position.set(0, 1.1, 0.05); env.add(pivot);
+  const fs = new THREE.Shape(); fs.moveTo(-1.7, 0); fs.lineTo(1.7, 0); fs.lineTo(0, -1.35); fs.closePath();
+  pivot.add(new THREE.Mesh(new THREE.ExtrudeGeometry(fs, { depth: 0.015, bevelEnabled: false }), mat.paper));
+  const seal = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.06, 40), mat.blue); seal.rotation.x = Math.PI / 2; seal.position.set(0, -1.15, 0.05); pivot.add(seal);
+  cast(env);
+  const glow = new THREE.PointLight(0xffc46b, 0, 4); glow.position.set(0, 0.9, 0.6); env.add(glow);
+  const sp = spot(0xfff1dc, 120, 0.3); placeSpot(sp, new THREE.Vector3(1.5, 8, 4), new THREE.Vector3(0, -2.2, 0)); g.add(sp.s, sp.s.target, sp.beam);
+  return (t) => {
+    env.position.set(0, -0.2, 0); env.rotation.set(-0.18, Math.sin(t * 0.4) * 0.12, 0.03);
+    const pop = clamp((t - 3.3) / 0.3); seal.scale.setScalar(Math.max(0.001, 1 - pop));
+    const open = easeIO((t - 3.4) / 1.1);
+    pivot.rotation.x = -0.2 - open * (Math.PI - 0.2);
+    const up = easeIO((t - 4.5) / 1.5);
+    bill.position.y = -0.05 + up * 1.6;
+    glow.intensity = 2.2 * ease((t - 4.2) / 1.2);
+    camera.position.set(-0.8 + t * 0.1, 0.9, 9.6 - t * 0.3); camera.lookAt(0, 0.35, 0);
+  };
+});
+
+const boxMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3550, roughness: 0.28, metalness: 0.35, clearcoat: 1, envMap: envTex, envMapIntensity: 1.2 });
+function makeBox(label) {
+  const b = new THREE.Group();
+  b.add(new THREE.Mesh(new RoundedBoxGeometry(1.7, 1.5, 1.7, 4, 0.12), boxMat));
+  const slot = new THREE.Mesh(new RoundedBoxGeometry(1.1, 0.03, 0.14, 2, 0.01), mat.glowBlue); slot.position.y = 0.76; b.add(slot);
+  const lbl = text3d(label, label.length > 1 ? 0.34 : 0.5, label === 'YOU' ? mat.white : mat.blue, 0.1); lbl.position.set(0, 0, 0.98); b.add(lbl);
+  return cast(b);
+}
+S((g) => { // 5 — invest where you believe
+  const boxes = ['A', 'B', 'C'].map((n, i) => { const b = makeBox(n); b.position.set((i - 1) * 2.6, -1.45, 0); g.add(b); return b; });
+  const sps = boxes.map((b) => { const sp = spot(0xdfe8ff, 140, 0.2); placeSpot(sp, new THREE.Vector3(b.position.x, 7, 2), new THREE.Vector3(b.position.x, -2.2, 0)); g.add(sp.s, sp.s.target, sp.beam); return sp; });
+  const order = [0, 1, 2, 0, 2, 1, 0, 2, 0, 1, 2, 0];
+  const r = rng(21);
+  const bills = order.map((bi, k) => { const m = makeBill(); m.scale.setScalar(0.35); g.add(m); return { m, bi, delay: 0.35 + k * 0.28, spin: (r() - 0.5) * 3, dz: (r() - 0.5) * 0.04 }; });
+  return (t) => {
+    boxes.forEach((b, i) => b.scale.setScalar(back(t * 2 - i * 0.15)));
+    const counts = [0, 0, 0];
+    bills.forEach(({ m, bi, delay, spin, dz }) => {
+      const p = clamp((t - delay) / 1.15); const bx = boxes[bi].position;
+      m.visible = p > 0 && p < 1;
+      if (p >= 1) counts[bi]++;
+      const e = easeIO(p);
+      const top = bx.y + 0.76;
+      m.position.set(bx.x, top + 0.18 + (1 - e) * 4.2 - (p > 0.92 ? (p - 0.92) / 0.08 * 0.45 : 0), bx.z + dz);
+      m.rotation.set(0, spin * (1 - e), spin * 0.6 * (1 - e));
+    });
+    sps.forEach((sp, i) => { sp.s.intensity = 140 + counts[i] * 30; });
+    camera.position.set(Math.sin(t * 0.2) * 1.2, 1.6, 11.5); camera.lookAt(0, -0.8, 0);
+  };
+});
+
+S((g) => { // 6 — not yourself
+  const box = makeBox('YOU'); box.position.set(0, -1.45, 0); g.add(box);
+  const sp = spot(0xdfe8ff, 200, 0.24); placeSpot(sp, new THREE.Vector3(0, 7, 2.5), new THREE.Vector3(0, -2.2, 0)); g.add(sp.s, sp.s.target, sp.beam);
+  const bill = makeBill(); bill.scale.setScalar(0.35); g.add(bill);
+  const cross = new THREE.Group();
+  const b1 = new THREE.Mesh(new RoundedBoxGeometry(2.4, 0.26, 0.2, 2, 0.08), mat.red); b1.rotation.z = Math.PI / 4;
+  const b2 = new THREE.Mesh(new RoundedBoxGeometry(2.4, 0.26, 0.2, 2, 0.08), mat.red); b2.rotation.z = -Math.PI / 4; b2.position.z = 0.22;
+  cross.add(b1, b2); cross.position.set(0, -1.0, 1.9); g.add(cast(cross));
+  const redLight = new THREE.PointLight(0xff2a3a, 0, 10); redLight.position.set(0, 0, 2.5); g.add(redLight);
+  const HIT = 2.25;
+  return (t) => {
+    box.scale.setScalar(back(t * 2));
+    const approach = easeIO(t / 1.8);
+    const top = box.position.y + 0.76;
+    let y = top + 0.55 + (1 - approach) * 3.5, x = 0, rz = 0, rx = 0;
+    if (t > HIT) { const k = ease((t - HIT) / 1.2); y += k * 2.2; x = k * -3.2; rz = k * 1.4; rx = k * 0.8; }
+    bill.position.set(x, y + Math.sin(t * 3) * 0.04, 0); bill.rotation.set(rx, 0, rz);
+    const c = t > HIT ? back((t - HIT) * 4) : 0; cross.scale.setScalar(Math.max(0.001, c * (1 + Math.exp(-(t - HIT) * 8) * 0.25)));
+    redLight.intensity = t > HIT ? 22 * Math.exp(-(t - HIT) * 1.5) + 4 : 0;
+    const shake = t > HIT ? Math.exp(-(t - HIT) * 7) * 0.1 : 0;
+    camera.position.set(Math.sin(t * 47) * shake + 0.8, 0.6 + Math.cos(t * 41) * shake, 8.6 - t * 0.2); camera.lookAt(0, -0.85, 0);
+  };
+});
+
+S((g) => { // 7 — the prize
+  const one = text3d('#1', 1.9, mat.gold, 0.6); one.position.set(0, 1.4, 0); g.add(one);
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 0.5, 64), mat.ink); ped.position.y = -0.1; g.add(cast(ped));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.72, 0.02, 8, 128), mat.glowBlue); ring.rotation.x = Math.PI / 2; ring.position.y = 0.16; g.add(ring);
+  const tag = labelPlane(6, 1.1, (c, w, h) => {
+    c.fillStyle = '#ffffff'; c.font = `700 ${h * 0.4}px ${SANS}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('Claude Team Premium', w / 2, h * 0.36);
+    c.fillStyle = '#ffd36b'; c.font = `600 ${h * 0.22}px ${SANS}`; c.fillText('1  MONTH', w / 2, h * 0.82);
+  });
+  tag.position.set(0, -0.85, 2.4); g.add(tag);
+  const sp = spot(0xffe2a0, 360, 0.26); placeSpot(sp, new THREE.Vector3(0, 8, 2.5), new THREE.Vector3(0, -2.2, 0)); g.add(sp.s, sp.s.target, sp.beam);
+  const r = rng(11);
+  const conf = Array.from({ length: 110 }, () => {
+    const behind = r() < 0.7;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.01), [mat.blue, mat.gold, mat.white][Math.floor(r() * 3)]); g.add(m);
+    const x = behind ? (r() - 0.5) * 12 : (r() < 0.5 ? -1 : 1) * (3 + r() * 3);
+    return { m, x, z: behind ? -2.5 - r() * 4 : 3 + r() * 1.5, sp: 0.9 + r() * 1.2, ph: r() * 10, d: r() * 1.0 };
+  });
+  return (t) => {
+    one.scale.setScalar(back(t * 1.8)); one.rotation.y = Math.sin(t * 0.8) * 0.35;
+    ped.scale.setScalar(ease(t * 2.5)); ring.scale.setScalar(ease(t * 2.5));
+    tag.material.opacity = ease((t - 0.7) * 2);
+    conf.forEach(({ m, x, z, sp: s, ph, d }) => { const tt = t - d; m.visible = tt > 0; m.position.set(x + Math.sin(tt * 2 + ph) * 0.3, 6 - tt * s * 2, z); m.rotation.set(tt * 3 + ph, tt * 2, ph); });
+    camera.position.set(Math.sin(t * 0.25) * 2.2, 1.0, 11.8 - t * 0.3); camera.lookAt(0, 0.05, 0);
+  };
+});
+
+S((g) => { // 8 — see you there
+  const title = text3d('ACE Pitch Day', 0.95, mat.blue, 0.45); title.position.set(0, 0.8, 0); g.add(title);
+  const date = labelPlane(7, 0.7, (c, w, h) => { c.fillStyle = '#ffffff'; c.font = `600 ${h * 0.5}px ${SANS}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('OCT 15, 2026  ·  ACE CLUB', w / 2, h / 2); });
+  date.position.set(0, -0.3, 0.3); g.add(date);
+  const orbit = Array.from({ length: 8 }, () => { const c = makeCard(); c.scale.setScalar(0.55); g.add(c); return c; });
+  const sp1 = spot(0x9fc2ff, 180, 0.3); g.add(sp1.s, sp1.s.target, sp1.beam);
+  const sp2 = spot(0xffffff, 180, 0.3); g.add(sp2.s, sp2.s.target, sp2.beam);
+  return (t) => {
+    title.scale.setScalar(back(t * 1.6)); date.material.opacity = ease((t - 0.6) * 2);
+    orbit.forEach((c, i) => { const a = t * 0.4 + i / orbit.length * Math.PI * 2; c.position.set(Math.cos(a) * 7, 3.0 + Math.sin(a * 2) * 0.3, Math.sin(a) * 1.4 - 5.5); c.rotation.set(0.1, -a + Math.PI / 2, 0.1); });
+    placeSpot(sp1, new THREE.Vector3(-6, 7, 3), new THREE.Vector3(Math.sin(t * 0.8) * 3, -2.2, 0));
+    placeSpot(sp2, new THREE.Vector3(6, 7, 3), new THREE.Vector3(-Math.sin(t * 0.8) * 3, -2.2, 0));
+    camera.position.set(0, 0.7, 12 - ease(t * 0.5) * 1.2); camera.lookAt(0, 0.35, 0);
+  };
+});
+
+
+const mascot = new THREE.Group();
+{
+  const orange = new THREE.MeshStandardMaterial({ color: 0xd97757, emissive: 0x7a2e14, emissiveIntensity: 0.55, roughness: 0.45 });
+  const black = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+  const body = new THREE.Mesh(new RoundedBoxGeometry(0.62, 0.42, 0.36, 3, 0.05), orange); mascot.add(body);
+  const eyes = [-0.13, 0.13].map((x) => { const e = new THREE.Mesh(new RoundedBoxGeometry(0.07, 0.11, 0.03, 2, 0.01), black); e.position.set(x, 0.04, 0.185); mascot.add(e); return e; });
+  const arms = [-1, 1].map((sd) => { const pv = new THREE.Group(); pv.position.set(sd * 0.31, -0.02, 0); const a = new THREE.Mesh(new RoundedBoxGeometry(0.14, 0.1, 0.16, 2, 0.03), orange); a.position.x = sd * 0.07; pv.add(a); mascot.add(pv); return pv; });
+  [-0.22, -0.08, 0.08, 0.22].forEach((x) => { const l = new THREE.Mesh(new RoundedBoxGeometry(0.07, 0.14, 0.12, 2, 0.02), orange); l.position.set(x, -0.27, 0); mascot.add(l); });
+  mascot.userData = { body, eyes, arms };
+  const light = new THREE.PointLight(0xffd2b8, 3, 3); light.position.set(-0.3, 0.6, 1.2); mascot.add(light);
+}
+mascot.position.set(1.12, -0.62, -3.2); mascot.rotation.y = -0.35; camera.add(mascot);
+const bubbleLines = [['Psst! Wanna know the rules?', '噓！想知道規則嗎？'], ['Nope. Not even a little!', '不行，一點點都不行！'], ['See you there!', '到時候見！']];
+const bubbles = bubbleLines.map(([txt, zh]) => {
+  const m = labelPlane(1.5, 0.36, (c, w, h) => {
+    c.fillStyle = '#e4e8ef'; c.beginPath(); c.roundRect(4, 4, w * 0.95 - 8, h - 8, (h - 8) / 2); c.fill();
+    c.beginPath(); c.moveTo(w * 0.95 - 30, h * 0.35); c.lineTo(w - 4, h * 0.55); c.lineTo(w * 0.95 - 30, h * 0.72); c.fill();
+    c.fillStyle = '#111318'; c.font = `700 ${h * 0.27}px ${SANS}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, w * 0.475, h * 0.37);
+    c.fillStyle = '#4a5160'; c.font = `500 ${h * 0.2}px "PingFang TC", ${SANS}`; c.fillText(zh, w * 0.475, h * 0.68);
+  }, 1536);
+  m.position.set(0.02, -0.55, -3.25); m.visible = false; camera.add(m); return m;
+});
+function updateMascot(time) {
+  const win = MASCOT.find(([a, b]) => time >= a - 0.01 && time <= b);
+  bubbles.forEach((b) => { b.visible = false; });
+  if (!win) { mascot.visible = false; return; }
+  const [a, b, k] = win; const t = time - a, L = b - a;
+  mascot.visible = true;
+  const inn = back(t / 0.35), out = 1 - easeIO((t - (L - 0.3)) / 0.3);
+  const vis = Math.min(inn, out);
+  const talking = t > 0.2 && t < L - 0.35;
+  mascot.position.y = -1.5 + vis * 0.88 + (talking ? Math.abs(Math.sin(t * 13)) * 0.03 : 0);
+  const { body, eyes, arms } = mascot.userData;
+  body.scale.set(1 - (talking ? Math.sin(t * 26) * 0.03 : 0), 1 + (talking ? Math.sin(t * 26) * 0.05 : 0), 1);
+  const blink = (t % 1.7) > 1.6 ? 0.15 : 1; eyes.forEach((e) => { e.scale.y = blink; });
+  arms[0].rotation.z = Math.sin(t * 6) * 0.25;
+  arms[1].rotation.z = k === 2 ? 0.9 + Math.sin(t * 14) * 0.6 : -Math.sin(t * 6) * 0.25;
+  mascot.rotation.y = -0.35 + Math.sin(t * 2) * 0.12;
+  const bb = bubbles[k]; bb.visible = t > 0.15 && t < L - 0.2; bb.scale.setScalar(Math.max(0.001, back((t - 0.15) / 0.25) * out));
+}
+
+function fadeAt(time) {
+  let black = 0, white = 0;
+  black = Math.max(black, 1 - clamp(time / 1.0));
+  for (let i = 1; i < CUTS.length - 1; i++) {
+    const c = CUTS[i];
+    if (FLASH.includes(c)) { if (time >= c) white = Math.max(white, 1 - clamp((time - c) / 0.7)); }
+    else black = Math.max(black, 1 - clamp(Math.abs(time - c) / 0.28));
+  }
+  black = Math.max(black, clamp((time - (TOTAL - 1.4)) / 1.2));
+  return { black, white };
+}
+
+window.renderAt = (time) => {
+  let idx = CUTS.findIndex((c, i) => time >= c && time < CUTS[i + 1]); if (idx < 0) idx = scenes.length - 1;
+  scenes.forEach((s, i) => { s.g.visible = i === idx; });
+  scenes[idx].upd(time - CUTS[idx], CUTS[idx + 1] - CUTS[idx]);
+  updateMascot(time);
+  dust.rotation.y = time * 0.02; dust.position.y = Math.sin(time * 0.3) * 0.2;
+  const { black, white } = fadeAt(time);
+  if (white > black) { fader.material.color.set(0xffffff); fader.material.opacity = white; } else { fader.material.color.set(0x000000); fader.material.opacity = black; }
+  composer.render();
+};
+window.ready = true;
+</script>
+</body>
+</html>

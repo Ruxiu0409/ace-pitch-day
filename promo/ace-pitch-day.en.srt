@@ -1,23 +1,47 @@
 1
-00:00:00,700 --> 00:00:05,166
-Three minutes. One project. Win over the whole room.
+00:00:01,400 --> 00:00:05,347
+Every company you have ever heard of… started the same way.
 
 2
-00:00:05,416 --> 00:00:11,844
-At ACE, building it is only half the job. Getting people to back it is the other half.
+00:00:05,900 --> 00:00:10,379
+Someone stood up in front of a room, and asked them to believe.
 
 3
-00:00:12,094 --> 00:00:18,756
-Everyone gets an envelope. Only you know how much capital is inside.
+00:00:12,200 --> 00:00:14,750
+This is ACE Pitch Day.
 
 4
-00:00:19,006 --> 00:00:26,465
-After every pitch, invest in the project you believe in. One rule: never your own.
+00:00:15,700 --> 00:00:21,132
+You built something. Now you have three minutes, to make the whole room believe in it.
 
 5
-00:00:26,715 --> 00:00:31,565
-The top-funded founder wins one month of Claude Team Premium.
+00:00:21,400 --> 00:00:23,432
+Psst! Wanna know the rules?
 
 6
-00:00:31,815 --> 00:00:36,457
-ACE Pitch Day. October 15. See you there.
+00:00:23,500 --> 00:00:29,270
+Everyone gets a sealed envelope of cash. How much is inside? Only you know.
+
+7
+00:00:29,500 --> 00:00:33,850
+Listen to every pitch. Then put your money, where you believe.
+
+8
+00:00:33,900 --> 00:00:37,350
+Just one rule. You can't invest in yourself.
+
+9
+00:00:37,400 --> 00:00:39,437
+Nope. Not even a little!
+
+10
+00:00:39,500 --> 00:00:44,558
+The founder who raises the most, wins one month of Claude Team Premium.
+
+11
+00:00:45,100 --> 00:00:48,550
+October fifteenth. Bring your best pitch.
+
+12
+00:00:48,600 --> 00:00:49,931
+See you there!
