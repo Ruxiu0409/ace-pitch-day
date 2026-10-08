@@ -1,0 +1,6 @@
+{
+  "name": "ace-pitch-day",
+  "compatibility_date": "2026-10-08",
+  "assets": { "directory": "./public" },
+  "routes": [{ "pattern": "pitch.tsaicy.dev", "custom_domain": true }]
+}

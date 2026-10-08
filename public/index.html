@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACE Pitch Day</title>
+<meta name="description" content="ACE Club 創投發表會。一人一個作品，台下每個人都是投資人。2026.10.15">
+<meta property="og:title" content="ACE Pitch Day">
+<meta property="og:description" content="一人一個作品，台下每個人都是投資人。2026.10.15">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♠</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #0d0d0d;
+    --muted: #5d5d5d;
+    --faint: #8f8f8f;
+    --line: #e5e5e5;
+    --surface: #f4f4f4;
+    --accent: #2e6fe0;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    --wrap: 1120px;
+    --gutter: 24px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
+
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
+  .brand span { font-size: 18px; }
+  .links { display: flex; gap: 28px; font-size: 14px; }
+  .links a { text-decoration: none; color: var(--muted); transition: color .15s; }
+  .links a:hover { color: var(--text); }
+
+  .video {
+    position: relative;
+    margin-top: 12px;
+    aspect-ratio: 16 / 9;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #0d0d0d;
+  }
+  .video iframe, .video video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .poster {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(40% 55% at 22% 30%, #8fb4ff 0%, transparent 70%),
+      radial-gradient(35% 50% at 78% 65%, #2e6fe0 0%, transparent 70%),
+      radial-gradient(30% 40% at 60% 20%, #f2c9a8 0%, transparent 70%),
+      radial-gradient(45% 60% at 35% 85%, #c9d8ff 0%, transparent 70%),
+      #e9eef8;
+    filter: saturate(1.05);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    color: #fff;
+  }
+  .poster::after {
+    content: ""; position: absolute; inset: 0;
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    z-index: 0;
+  }
+  .poster > * { position: relative; z-index: 1; }
+  .play {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    display: grid; place-items: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  }
+  .play svg { width: 22px; height: 22px; margin-left: 4px; fill: #0d0d0d; }
+  .poster p { margin: 0; font-size: 15px; font-weight: 500; color: rgba(13, 13, 13, 0.7); }
+
+  header.hero { padding: 72px 0 40px; }
+  .eyebrow { font-size: 14px; color: var(--muted); margin: 0 0 18px; }
+  h1 {
+    font-size: clamp(44px, 8vw, 88px);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin: 0;
+  }
+  .lede {
+    font-size: clamp(20px, 2.4vw, 26px);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    max-width: 720px;
+    margin: 28px 0 0;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+  .pill {
+    display: inline-flex; align-items: center;
+    height: 40px; padding: 0 18px;
+    border-radius: 999px;
+    font-size: 14px; font-weight: 500;
+    background: var(--surface);
+  }
+  .pill.dark { background: var(--text); color: #fff; text-decoration: none; }
+
+  section { padding: 96px 0 0; }
+  .section-head { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 40px; }
+  .label { font-size: 14px; color: var(--muted); margin: 0; }
+  h2 {
+    font-size: clamp(30px, 4.4vw, 48px);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+  .sub { color: var(--muted); max-width: 640px; margin: 4px 0 0; }
+
+  .rows { border-top: 1px solid var(--line); }
+  .row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 24px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .row .k { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .row .v { font-size: 18px; }
+  .row .v small { display: block; color: var(--muted); font-size: 15px; margin-top: 4px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .step { background: var(--surface); border-radius: 20px; padding: 28px 28px 32px; }
+  .step .n { font-size: 14px; color: var(--muted); }
+  .step h3 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 8px; }
+  .step p { margin: 0; color: var(--muted); font-size: 16px; }
+
+  .money { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-top: 16px; }
+  .bill-stage {
+    border-radius: 20px;
+    background:
+      radial-gradient(60% 80% at 30% 20%, #dfe8fb 0%, transparent 70%),
+      radial-gradient(60% 80% at 80% 90%, #f6e6d8 0%, transparent 70%),
+      #f4f4f4;
+    display: grid; place-items: center;
+    padding: 48px 24px;
+    min-height: 320px;
+  }
+  .bill {
+    position: relative;
+    width: min(100%, 400px);
+    aspect-ratio: 2.2 / 1;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #e8efe3 0%, #d5e2cf 100%);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    padding: 16px 20px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    color: #2f4a2a;
+    transform: rotate(-4deg);
+  }
+  .bill::before {
+    content: ""; position: absolute; inset: 8px;
+    border: 1.5px solid rgba(47, 74, 42, 0.35); border-radius: 6px;
+  }
+  .bill .top, .bill .bottom { display: flex; justify-content: space-between; align-items: center; font-size: 12px; letter-spacing: 0.12em; font-weight: 600; }
+  .bill .amount { font-size: 44px; font-weight: 600; letter-spacing: -0.02em; text-align: center; line-height: 1; }
+  .bill .amount span { filter: blur(9px); }
+  .bill .seal { font-size: 26px; }
+  .money .rows { border-top: 0; }
+  .money .row { grid-template-columns: 1fr; gap: 6px; padding: 18px 0; }
+  .money .row:first-child { padding-top: 0; }
+
+  .prize {
+    border-radius: 20px;
+    background: var(--text);
+    color: #fff;
+    padding: 48px 40px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+  }
+  .prize .label { color: rgba(255, 255, 255, 0.6); }
+  .prize h3 { font-size: clamp(28px, 4vw, 44px); font-weight: 500; letter-spacing: -0.025em; line-height: 1.1; margin: 14px 0 0; }
+  .prize p { color: rgba(255, 255, 255, 0.7); margin: 16px 0 0; max-width: 520px; }
+  .prize .rank { font-size: clamp(72px, 12vw, 140px); font-weight: 500; letter-spacing: -0.05em; line-height: .8; }
+
+  .list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card {
+    display: block; text-decoration: none;
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 24px;
+    transition: background .15s;
+  }
+  .card:hover { background: var(--surface); }
+  .card .who { font-size: 14px; color: var(--muted); }
+  .card h3 { font-size: 20px; font-weight: 500; margin: 36px 0 4px; }
+  .card .url { font-size: 14px; color: var(--accent); }
+
+  footer { margin-top: 120px; border-top: 1px solid var(--line); }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 28px; padding-bottom: 48px; font-size: 14px; color: var(--muted); }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  @media (max-width: 800px) {
+    :root { --gutter: 16px; }
+    .links { display: none; }
+    header.hero { padding: 48px 0 24px; }
+    section { padding-top: 72px; }
+    .video { border-radius: 14px; margin-top: 4px; }
+    .row { grid-template-columns: 1fr; gap: 4px; padding: 18px 0; }
+    .steps, .list, .money { grid-template-columns: 1fr; }
+    .step h3 { margin-top: 32px; }
+    .prize { grid-template-columns: 1fr; padding: 32px 24px; }
+    .prize .rank { order: -1; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><span>♠</span>ACE Pitch Day</a>
+    <div class="links">
+      <a href="#schedule">流程</a>
+      <a href="#invest">投資</a>
+      <a href="#rules">規則</a>
+      <a href="#prize">獎品</a>
+      <a href="#founders">發表名單</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top" class="wrap">
+  <div class="video" id="video">
+    <div class="poster">
+      <div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div>
+      <p>活動影片即將公開</p>
+    </div>
+  </div>
+
+  <header class="hero">
+    <p class="eyebrow">ACE Club · 2026.10.15（四）社課時間</p>
+    <h1>ACE Pitch Day</h1>
+    <p class="lede">一人一個作品，三分鐘說服大家。台下每個人都是投資人，手上的錢投給誰，誰就贏。</p>
+    <div class="meta">
+      <a class="pill dark" href="#invest">怎麼投資</a>
+      <span class="pill">約 30 分鐘</span>
+      <span class="pill">現場實體投票</span>
+    </div>
+  </header>
+
+  <section id="schedule">
+    <div class="section-head">
+      <p class="label">流程</p>
+      <h2>當天怎麼進行</h2>
+    </div>
+    <div class="rows">
+      <div class="row"><div class="k">2 分鐘</div><div class="v">開場<small>領信封、抽發表順序</small></div></div>
+      <div class="row"><div class="k">每人 4 分鐘</div><div class="v">輪流發表<small>3 分鐘發表 + 1 分鐘問答</small></div></div>
+      <div class="row"><div class="k">4 分鐘</div><div class="v">投資時間<small>把錢投進你看好的投資箱</small></div></div>
+      <div class="row"><div class="k">4 分鐘</div><div class="v">開箱、計票、頒獎</div></div>
+    </div>
+  </section>
+
+  <section id="invest">
+    <div class="section-head">
+      <p class="label">投資</p>
+      <h2>每個人的資本都不一樣</h2>
+      <p class="sub">開場時每人會拿到一個信封，裡面是 ACE 幣。有人多、有人少，拆開之前誰都不知道。</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3>拿信封</h3><p>拆開看看你有多少錢。不用跟別人說，大家都不知道彼此有多少。</p></div>
+      <div class="step"><div class="n">02</div><h3>聽發表</h3><p>每個人上台 3 分鐘。想想看，你會把真的錢投給誰？</p></div>
+      <div class="step"><div class="n">03</div><h3>投下去</h3><p>全部發表完，把鈔票放進你看好的投資箱。可以全押，也可以分開投。</p></div>
+    </div>
+    <div class="money">
+      <div class="bill-stage">
+        <div class="bill">
+          <div class="top"><span>ACE CLUB</span><span>NO. ????</span></div>
+          <div class="amount"><span>1,000,000</span></div>
+          <div class="bottom"><span>ACE 幣</span><span class="seal">♠</span></div>
+        </div>
+      </div>
+      <div class="rows" style="padding: 8px 0;">
+        <div class="row"><div class="k">資本</div><div class="v">每人金額不同，信封裡有多少就是多少</div></div>
+        <div class="row"><div class="k">投給誰</div><div class="v">任何人，除了你自己</div></div>
+        <div class="row"><div class="k">怎麼投</div><div class="v">把鈔票放進發表者面前的投資箱</div></div>
+        <div class="row"><div class="k">沒投完</div><div class="v">不算數，也不會退回</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <div class="section-head">
+      <p class="label">規則</p>
+      <h2>上台和投資前，先看這幾條</h2>
+    </div>
+    <div class="rows">
+      <div class="row"><div class="k">發表</div><div class="v">每人 3 分鐘，時間到就停<small>之後有 1 分鐘讓台下提問</small></div></div>
+      <div class="row"><div class="k">形式</div><div class="v">可以做簡報，也可以直接 Demo<small>直接 Demo 請自己帶設備：筆電或平板、充電線、轉接頭</small></div></div>
+      <div class="row"><div class="k">作品網址</div><div class="v">10/14（三）晚上前貼到 Classroom</div></div>
+      <div class="row"><div class="k">備案</div><div class="v">建議先錄一支 Demo 影片<small>現場網路或設備出問題，就直接播影片</small></div></div>
+      <div class="row"><div class="k">不能投自己</div><div class="v">發表者也會拿到信封，但錢只能投給別人<small>投進自己箱子的不算</small></div></div>
+      <div class="row"><div class="k">投資時機</div><div class="v">全部發表完才開始投<small>後面上台的人不會吃虧</small></div></div>
+      <div class="row"><div class="k">同分</div><div class="v">由評審決定</div></div>
+    </div>
+  </section>
+
+  <section id="prize">
+    <div class="prize">
+      <div>
+        <p class="label">獎品 · 只取第一名</p>
+        <h3>Claude Team Premium<br>帳號一個月</h3>
+        <p>投資箱裡金額最高的人獲勝。</p>
+      </div>
+      <div class="rank">#1</div>
+    </div>
+  </section>
+
+  <section id="founders">
+    <div class="section-head">
+      <p class="label">發表名單</p>
+      <h2>今天上台的人</h2>
+      <p class="sub">順序當天抽籤決定。</p>
+    </div>
+    <div class="list">
+      <a class="card" href="#"><div class="who">發表者姓名</div><h3>作品名稱</h3><div class="url">作品網址</div></a>
+      <a class="card" href="#"><div class="who">發表者姓名</div><h3>作品名稱</h3><div class="url">作品網址</div></a>
+      <a class="card" href="#"><div class="who">發表者姓名</div><h3>作品名稱</h3><div class="url">作品網址</div></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>♠ ACE Club · AI Creators &amp; Executors</span>
+    <a href="https://www.instagram.com/aceclub_2026/">Instagram @aceclub_2026</a>
+  </div>
+</footer>
+
+<script>
+  // Fill in when the event video is ready: a YouTube link or an mp4 path (e.g. "/video.mp4").
+  const VIDEO = "";
+
+  (function mountVideo() {
+    if (!VIDEO) return;
+    const box = document.getElementById("video");
+    const yt = VIDEO.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+    box.innerHTML = yt
+      ? `<iframe src="https://www.youtube.com/embed/${yt[1]}?rel=0" title="ACE Pitch Day" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+      : `<video src="${VIDEO}" controls playsinline muted preload="metadata"></video>`;
+  })();
+</script>
+</body>
+</html>
