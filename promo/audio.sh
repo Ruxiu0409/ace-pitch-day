@@ -1,0 +1,4 @@
+ffmpeg -loglevel error -y -i vo/l1.wav -i vo/l2.wav -i vo/l3.wav -i vo/l4.wav -i vo/l5.wav -i vo/l6.wav \
+ -f lavfi -t 37.507 -i "sine=f=220:sample_rate=48000" -f lavfi -t 37.507 -i "sine=f=277.18:sample_rate=48000" -f lavfi -t 37.507 -i "sine=f=329.63:sample_rate=48000" -f lavfi -t 37.507 -i "sine=f=110:sample_rate=48000" \
+ -filter_complex "[0]adelay=800|800,volume=1.6[v0];[1]adelay=5516|5516,volume=1.6[v1];[2]adelay=12194|12194,volume=1.6[v2];[3]adelay=19106|19106,volume=1.6[v3];[4]adelay=26815|26815,volume=1.6[v4];[5]adelay=31915|31915,volume=1.6[v5];[6][7][8][9]amix=inputs=4:normalize=0,volume=0.035,tremolo=f=0.25:d=0.5,lowpass=f=900,afade=t=in:d=1.5,afade=t=out:st=35.007:d=2.5,aformat=channel_layouts=stereo[pad];[v0][v1][v2][v3][v4][v5][pad]amix=inputs=7:normalize=0,alimiter=limit=0.95[out]" \
+ -map "[out]" -ar 48000 -t 37.507 audio.wav

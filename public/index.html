@@ -20,6 +20,7 @@
     --line: #e5e5e5;
     --surface: #f4f4f4;
     --accent: #2e6fe0;
+    --claude: #d97757;
     --sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
     --wrap: 1120px;
     --gutter: 24px;
@@ -36,6 +37,8 @@
     -webkit-font-smoothing: antialiased;
   }
   a { color: inherit; }
+  p, small, .v, li { text-wrap: pretty; }
+  h1, h2, h3 { text-wrap: balance; }
   .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
 
   nav {
@@ -103,15 +106,6 @@
     max-width: 720px;
     margin: 28px 0 0;
   }
-  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
-  .pill {
-    display: inline-flex; align-items: center;
-    height: 40px; padding: 0 18px;
-    border-radius: 999px;
-    font-size: 14px; font-weight: 500;
-    background: var(--surface);
-  }
-  .pill.dark { background: var(--text); color: #fff; text-decoration: none; }
 
   section { padding: 96px 0 0; }
   .section-head { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 40px; }
@@ -123,7 +117,7 @@
     letter-spacing: -0.025em;
     margin: 0;
   }
-  .sub { color: var(--muted); max-width: 640px; margin: 4px 0 0; }
+  .sub { color: var(--muted); max-width: 760px; margin: 4px 0 0; }
 
   .rows { border-top: 1px solid var(--line); }
   .row {
@@ -137,11 +131,61 @@
   .row .v { font-size: 18px; }
   .row .v small { display: block; color: var(--muted); font-size: 15px; margin-top: 4px; }
 
+  .timeline { position: relative; }
+  .tl-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .timeline .track, .timeline .fill { position: absolute; top: 6px; left: 7px; right: 0; height: 2px; border-radius: 2px; }
+  .timeline .track { background: var(--line); }
+  .timeline .fill { background: var(--text); right: auto; width: 0; }
+  .timeline.is-on .fill { width: calc(100% - 7px); transition: width 2.4s linear; }
+  .tl-item { position: relative; padding-top: 36px; }
+  .tl-item::before {
+    content: ""; position: absolute; left: 0; top: 0;
+    width: 14px; height: 14px; border-radius: 50%; box-sizing: border-box;
+    background: var(--bg); border: 2px solid var(--line);
+    transition: border-color .3s, background .3s, transform .3s;
+  }
+  .tl-time { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; margin-bottom: 6px; transition: color .3s; }
+  .tl-item h3 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 0; }
+  .tl-item p { margin: 4px 0 0; color: var(--muted); font-size: 16px; }
+  .js .tl-body, .js .tl-time { opacity: 0; transform: translateY(12px); transition: opacity .6s ease, transform .6s ease, color .3s; }
+  .timeline.is-on .tl-item::before { border-color: var(--text); background: var(--text); transition-delay: calc(var(--i) * .6s); }
+  .timeline.is-on .tl-time { color: var(--text); }
+  .timeline.is-on .tl-body, .timeline.is-on .tl-time { opacity: 1; transform: none; transition-delay: calc(var(--i) * .6s + .1s); }
+  .tl-split { display: flex; gap: 4px; max-width: 260px; margin-top: 14px; }
+  .tl-split span { flex: 1; height: 8px; border-radius: 4px; background: var(--surface); position: relative; overflow: hidden; }
+  .tl-split span::after {
+    content: ""; position: absolute; inset: 0; background: var(--text);
+    transform: scaleX(0); transform-origin: left; transition: transform .4s ease;
+  }
+  .tl-split span.qa::after { background: var(--claude); }
+  .timeline.is-on .tl-split span::after { transform: scaleX(1); }
+  .timeline.is-on .tl-split span:nth-child(1)::after { transition-delay: .9s; }
+  .timeline.is-on .tl-split span:nth-child(2)::after { transition-delay: 1.3s; }
+  .timeline.is-on .tl-split span:nth-child(3)::after { transition-delay: 1.7s; }
+  .timeline.is-on .tl-split span:nth-child(4)::after { transition-delay: 2.1s; }
+  .tl-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .tl-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--text); }
+  .tl-legend i.qa { background: var(--claude); }
+  @media (prefers-reduced-motion: reduce) {
+    .timeline *, .timeline *::before, .timeline *::after { transition: none !important; }
+  }
+
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .step { background: var(--surface); border-radius: 20px; padding: 28px 28px 32px; }
   .step .n { font-size: 14px; color: var(--muted); }
   .step h3 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; margin: 56px 0 8px; }
+  .step .art { display: block; height: 104px; width: auto; margin: 20px 0 0; transition: transform .4s ease; }
+  .step:hover .art { transform: translateY(-4px) rotate(-1.5deg); }
+  .step .art + h3 { margin-top: 20px; }
+  .criteria .step .art { height: 64px; }
+  .pending .art { display: block; width: 200px; max-width: 100%; height: auto; margin: 0 auto 20px; }
+  .prize .worth { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); font-size: 15px; font-weight: 500; }
+  .prize .worth small { color: rgba(255, 255, 255, 0.8); font-size: 13px; }
   .step p { margin: 0; color: var(--muted); font-size: 16px; }
+
+  .criteria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .note { margin-top: 16px; padding: 20px 24px; border: 1px solid var(--line); border-radius: 20px; color: var(--muted); font-size: 16px; }
+  .note strong { color: var(--text); font-weight: 500; }
 
   .money { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-top: 16px; }
   .bill-stage {
@@ -180,7 +224,7 @@
 
   .prize {
     border-radius: 20px;
-    background: var(--text);
+    background: var(--claude);
     color: #fff;
     padding: 48px 40px;
     display: grid;
@@ -188,10 +232,14 @@
     align-items: end;
     gap: 24px;
   }
-  .prize .label { color: rgba(255, 255, 255, 0.6); }
+  .prize .label { color: rgba(255, 255, 255, 0.78); }
   .prize h3 { font-size: clamp(28px, 4vw, 44px); font-weight: 500; letter-spacing: -0.025em; line-height: 1.1; margin: 14px 0 0; }
-  .prize p { color: rgba(255, 255, 255, 0.7); margin: 16px 0 0; max-width: 520px; }
+  .prize p { color: rgba(255, 255, 255, 0.88); margin: 16px 0 0; max-width: 520px; }
   .prize .rank { font-size: clamp(72px, 12vw, 140px); font-weight: 500; letter-spacing: -0.05em; line-height: .8; }
+  .prize .side { display: flex; align-items: flex-end; gap: clamp(16px, 3vw, 32px); }
+  .clawd { width: clamp(96px, 13vw, 150px); height: auto; display: block; animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @media (prefers-reduced-motion: reduce) { .clawd { animation: none; } }
 
   .list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .card {
@@ -205,10 +253,33 @@
   .card h3 { font-size: 20px; font-weight: 500; margin: 36px 0 4px; }
   .card .url { font-size: 14px; color: var(--accent); }
 
+  .pending { border: 1px dashed var(--line); border-radius: 20px; padding: 48px 24px; text-align: center; }
+  .pending p { margin: 0; }
+  .pending .label { margin-bottom: 6px; }
+
   footer { margin-top: 120px; border-top: 1px solid var(--line); }
   footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 28px; padding-bottom: 48px; font-size: 14px; color: var(--muted); }
   footer a { text-decoration: none; }
   footer a:hover { color: var(--text); }
+
+  /* Centered layout */
+  main { text-align: center; }
+  .lede, .sub { margin-left: auto; margin-right: auto; }
+  .section-head { justify-items: center; }
+  .step .art { margin-left: auto; margin-right: auto; }
+  .tl-item::before { left: 50%; margin-left: -7px; }
+  .timeline .track, .timeline .fill { left: calc(12.5% - 9px); right: calc(12.5% - 9px); }
+  .timeline .fill { right: auto; }
+  .timeline.is-on .fill { width: calc(75% + 18px); }
+  .tl-split { margin-left: auto; margin-right: auto; }
+  .tl-legend { justify-content: center; }
+  .rows { max-width: 720px; margin-left: auto; margin-right: auto; }
+  .row { grid-template-columns: 1fr; gap: 4px; }
+  .money .rows { display: flex; flex-direction: column; justify-content: center; }
+  .prize { grid-template-columns: 1fr; justify-items: center; }
+  .prize .side { order: -1; }
+  .prize p { margin-left: auto; margin-right: auto; }
+  footer .wrap { justify-content: center; flex-direction: column; align-items: center; text-align: center; }
 
   @media (max-width: 800px) {
     :root { --gutter: 16px; }
@@ -217,10 +288,12 @@
     section { padding-top: 72px; }
     .video { border-radius: 14px; margin-top: 4px; }
     .row { grid-template-columns: 1fr; gap: 4px; padding: 18px 0; }
-    .steps, .list, .money { grid-template-columns: 1fr; }
+    .tl-list { grid-template-columns: 1fr; gap: 36px; }
+    .timeline .track, .timeline .fill { display: none; }
+    .tl-item { padding-top: 26px; }
+    .steps, .criteria, .list, .money { grid-template-columns: 1fr; }
     .step h3 { margin-top: 32px; }
     .prize { grid-template-columns: 1fr; padding: 32px 24px; }
-    .prize .rank { order: -1; }
   }
 </style>
 </head>
@@ -232,6 +305,7 @@
     <div class="links">
       <a href="#schedule">流程</a>
       <a href="#invest">投資</a>
+      <a href="#criteria">評分</a>
       <a href="#rules">規則</a>
       <a href="#prize">獎品</a>
       <a href="#founders">發表名單</a>
@@ -251,11 +325,6 @@
     <p class="eyebrow">ACE Club · 2026.10.15（四）社課時間</p>
     <h1>ACE Pitch Day</h1>
     <p class="lede">一人一個作品，三分鐘說服大家。台下每個人都是投資人，手上的錢投給誰，誰就贏。</p>
-    <div class="meta">
-      <a class="pill dark" href="#invest">怎麼投資</a>
-      <span class="pill">約 30 分鐘</span>
-      <span class="pill">現場實體投票</span>
-    </div>
   </header>
 
   <section id="schedule">
@@ -263,11 +332,18 @@
       <p class="label">流程</p>
       <h2>當天怎麼進行</h2>
     </div>
-    <div class="rows">
-      <div class="row"><div class="k">2 分鐘</div><div class="v">開場<small>領信封、抽發表順序</small></div></div>
-      <div class="row"><div class="k">每人 4 分鐘</div><div class="v">輪流發表<small>3 分鐘發表 + 1 分鐘問答</small></div></div>
-      <div class="row"><div class="k">4 分鐘</div><div class="v">投資時間<small>把錢投進你看好的投資箱</small></div></div>
-      <div class="row"><div class="k">4 分鐘</div><div class="v">開箱、計票、頒獎</div></div>
+    <div class="timeline" id="timeline">
+      <div class="track" aria-hidden="true"></div>
+      <div class="fill" aria-hidden="true"></div>
+      <ol class="tl-list">
+      <li class="tl-item" style="--i: 0"><div class="tl-time">2 分鐘</div><div class="tl-body"><h3>開場</h3><p>領信封、抽發表順序</p></div></li>
+      <li class="tl-item" style="--i: 1"><div class="tl-time">每人 4 分鐘</div><div class="tl-body"><h3>輪流發表</h3><p>3 分鐘發表 + 1 分鐘問答</p>
+        <div class="tl-split" aria-hidden="true"><span></span><span></span><span></span><span class="qa"></span></div>
+        <div class="tl-legend" aria-hidden="true"><span><i></i>發表</span><span><i class="qa"></i>問答</span></div>
+      </div></li>
+      <li class="tl-item" style="--i: 2"><div class="tl-time">4 分鐘</div><div class="tl-body"><h3>投資時間</h3><p>把錢投進你看好的投資箱</p></div></li>
+      <li class="tl-item" style="--i: 3"><div class="tl-time">4 分鐘</div><div class="tl-body"><h3>開箱、計票、頒獎</h3><p>金額最高的人拿走第一名</p></div></li>
+      </ol>
     </div>
   </section>
 
@@ -278,9 +354,28 @@
       <p class="sub">開場時每人會拿到一個信封，裡面是 ACE 幣。有人多、有人少，拆開之前誰都不知道。</p>
     </div>
     <div class="steps">
-      <div class="step"><div class="n">01</div><h3>拿信封</h3><p>拆開看看你有多少錢。不用跟別人說，大家都不知道彼此有多少。</p></div>
-      <div class="step"><div class="n">02</div><h3>聽發表</h3><p>每個人上台 3 分鐘。想想看，你會把真的錢投給誰？</p></div>
-      <div class="step"><div class="n">03</div><h3>投下去</h3><p>全部發表完，把鈔票放進你看好的投資箱。可以全押，也可以分開投。</p></div>
+      <div class="step"><div class="n">01</div><svg class="art" viewBox="0 0 160 100" aria-hidden="true">
+          <g transform="rotate(-6 80 28)"><rect x="50" y="6" width="60" height="38" rx="4" fill="#d5e2cf" stroke="#2f4a2a" stroke-width="1.5"/><text x="58" y="20" font-size="8" font-weight="700" fill="#2f4a2a" letter-spacing="1">ACE</text><text x="100" y="38" font-size="11" fill="#2f4a2a" text-anchor="middle">♠</text></g>
+          <rect x="30" y="34" width="100" height="60" rx="6" fill="#fff" stroke="#0d0d0d" stroke-width="2"/>
+          <path d="M31 38 L80 70 L129 38" fill="none" stroke="#0d0d0d" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M33 91 L66 64 M127 91 L94 64" stroke="#0d0d0d" stroke-opacity=".2" stroke-width="2"/>
+          <circle cx="80" cy="70" r="7" fill="#d97757"/>
+        </svg><h3>拿信封</h3><p>拆開看看你有多少錢。不用跟別人說，大家都不知道彼此有多少。</p></div>
+      <div class="step"><div class="n">02</div><svg class="art" viewBox="0 0 160 100" aria-hidden="true">
+          <rect x="58" y="8" width="92" height="60" rx="6" fill="#fff" stroke="#0d0d0d" stroke-width="2"/>
+          <rect x="72" y="44" width="10" height="14" rx="2" fill="#c9d8ff"/><rect x="88" y="34" width="10" height="24" rx="2" fill="#8fb4ff"/><rect x="104" y="26" width="10" height="32" rx="2" fill="#2e6fe0"/><rect x="120" y="18" width="10" height="40" rx="2" fill="#d97757"/>
+          <path d="M44 62 L60 48" stroke="#2e6fe0" stroke-width="6" stroke-linecap="round"/>
+          <path d="M14 94 Q14 54 30 54 Q46 54 46 94 Z" fill="#2e6fe0"/>
+          <circle cx="30" cy="36" r="10" fill="#0d0d0d"/>
+          <rect x="98" y="76" width="52" height="18" rx="9" fill="#0d0d0d"/><text x="124" y="89" font-size="11" font-weight="600" fill="#fff" text-anchor="middle">3:00</text>
+        </svg><h3>聽發表</h3><p>每個人上台 3 分鐘。想想看，你會把真的錢投給誰？</p></div>
+      <div class="step"><div class="n">03</div><svg class="art" viewBox="0 0 160 100" aria-hidden="true">
+          <g transform="rotate(8 80 26)"><rect x="56" y="8" width="48" height="34" rx="3" fill="#d5e2cf" stroke="#2f4a2a" stroke-width="1.5"/><text x="80" y="30" font-size="11" fill="#2f4a2a" text-anchor="middle">♠</text></g>
+          <rect x="34" y="44" width="92" height="52" rx="6" fill="#0d0d0d"/>
+          <rect x="28" y="36" width="104" height="12" rx="4" fill="#0d0d0d"/>
+          <rect x="58" y="40" width="44" height="4" rx="2" fill="#5d5d5d"/>
+          <text x="80" y="82" font-size="22" fill="#d97757" text-anchor="middle">♠</text>
+        </svg><h3>投下去</h3><p>全部發表完，把鈔票放進你看好的投資箱。可以全押，也可以分開投。</p></div>
     </div>
     <div class="money">
       <div class="bill-stage">
@@ -299,6 +394,37 @@
     </div>
   </section>
 
+  <section id="criteria">
+    <div class="section-head">
+      <p class="label">評分</p>
+      <h2>投資前，可以想想這幾件事</h2>
+      <p class="sub">這次比的是解決問題，不是開公司。不用講商業模式，也不用算市場多大、怎麼賺錢。</p>
+    </div>
+    <div class="criteria">
+      <div class="step"><div class="n">01 · 問題</div><svg class="art" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="30" cy="34" r="26" fill="#fff" stroke="#0d0d0d" stroke-width="2"/><circle cx="30" cy="34" r="16" fill="none" stroke="#0d0d0d" stroke-width="2"/><circle cx="30" cy="34" r="7" fill="#d97757"/>
+          <path d="M31 33 L56 8 M48 6 L58 6 L58 16" fill="none" stroke="#0d0d0d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg><h3>這個問題是真的嗎？</h3><p>你自己或身邊的人有遇過嗎？講得出是誰、在什麼時候卡住的，比「大家都需要」更有說服力。</p></div>
+      <div class="step"><div class="n">02 · 解法</div><svg class="art" viewBox="0 13 64 36" aria-hidden="true">
+          <rect x="3" y="20" width="22" height="22" rx="5" fill="#fff" stroke="#0d0d0d" stroke-width="2"/><path d="M8 34 Q11 24 14 32 T20 28" fill="none" stroke="#5d5d5d" stroke-width="2" stroke-linecap="round"/>
+          <path d="M28 31 H38 M34 27 L38 31 L34 35" fill="none" stroke="#0d0d0d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="51" cy="31" r="11" fill="#2e6fe0"/><path d="M46 31 L50 35 L57 27" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg><h3>它真的解決了嗎？</h3><p>用了這個作品，原本麻煩的事有沒有變簡單、變快，或乾脆不用做了？</p></div>
+      <div class="step"><div class="n">03 · 完成度</div><svg class="art" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="10" y="14" width="44" height="30" rx="3" fill="#fff" stroke="#0d0d0d" stroke-width="2"/>
+          <path d="M4 48 H60 L56 53 H8 Z" fill="#0d0d0d"/>
+          <path d="M28 22 L38 29 L28 36 Z" fill="#d97757"/>
+        </svg><h3>現在就能用嗎？</h3><p>能在台上動起來，比只放投影片更有說服力。小而完整，勝過大而未完成。</p></div>
+      <div class="step"><div class="n">04 · 巧思</div><svg class="art" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 4 V9 M12 12 L16 16 M52 12 L48 16 M5 30 H10 M59 30 H54" stroke="#d97757" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="32" cy="30" r="14" fill="#fff" stroke="#0d0d0d" stroke-width="2"/>
+          <path d="M27 34 L32 26 L37 34" fill="none" stroke="#d97757" stroke-width="2" stroke-linejoin="round"/>
+          <rect x="26" y="44" width="12" height="9" rx="2" fill="#0d0d0d"/>
+        </svg><h3>有沒有讓你眼睛一亮？</h3><p>切入的角度、做法或細節，有沒有哪裡是你沒想到的。</p></div>
+    </div>
+    <p class="note"><strong>這些只是參考。</strong>最後還是看你願意把手上的錢交給誰。</p>
+  </section>
+
   <section id="rules">
     <div class="section-head">
       <p class="label">規則</p>
@@ -309,9 +435,7 @@
       <div class="row"><div class="k">形式</div><div class="v">可以做簡報，也可以直接 Demo<small>直接 Demo 請自己帶設備：筆電或平板、充電線、轉接頭</small></div></div>
       <div class="row"><div class="k">作品網址</div><div class="v">10/14（三）晚上前貼到 Classroom</div></div>
       <div class="row"><div class="k">備案</div><div class="v">建議先錄一支 Demo 影片<small>現場網路或設備出問題，就直接播影片</small></div></div>
-      <div class="row"><div class="k">不能投自己</div><div class="v">發表者也會拿到信封，但錢只能投給別人<small>投進自己箱子的不算</small></div></div>
       <div class="row"><div class="k">投資時機</div><div class="v">全部發表完才開始投<small>後面上台的人不會吃虧</small></div></div>
-      <div class="row"><div class="k">同分</div><div class="v">由評審決定</div></div>
     </div>
   </section>
 
@@ -321,8 +445,26 @@
         <p class="label">獎品 · 只取第一名</p>
         <h3>Claude Team Premium<br>帳號一個月</h3>
         <p>投資箱裡金額最高的人獲勝。</p>
+        <span class="worth">價值約 NT$4,000 <small>US$125 / 月</small></span>
       </div>
-      <div class="rank">#1</div>
+      <div class="side">
+        <div class="rank">#1</div>
+        <svg class="clawd" viewBox="0 0 14 10" shape-rendering="crispEdges" role="img" aria-label="Claude 吉祥物 Clawd">
+          <g fill="#faf9f5">
+            <rect x="2" y="0" width="10" height="6"/>
+            <rect x="0" y="2" width="2" height="2"/>
+            <rect x="12" y="2" width="2" height="2"/>
+            <rect x="3" y="6" width="1" height="3"/>
+            <rect x="5" y="6" width="1" height="3"/>
+            <rect x="8" y="6" width="1" height="3"/>
+            <rect x="10" y="6" width="1" height="3"/>
+          </g>
+          <g fill="#141413">
+            <rect x="4" y="2" width="1" height="2"/>
+            <rect x="9" y="2" width="1" height="2"/>
+          </g>
+        </svg>
+      </div>
     </div>
   </section>
 
@@ -332,10 +474,16 @@
       <h2>今天上台的人</h2>
       <p class="sub">順序當天抽籤決定。</p>
     </div>
-    <div class="list">
-      <a class="card" href="#"><div class="who">發表者姓名</div><h3>作品名稱</h3><div class="url">作品網址</div></a>
-      <a class="card" href="#"><div class="who">發表者姓名</div><h3>作品名稱</h3><div class="url">作品網址</div></a>
-      <a class="card" href="#"><div class="who">發表者姓名</div><h3>作品名稱</h3><div class="url">作品網址</div></a>
+    <div class="pending">
+      <svg class="art" viewBox="0 0 200 120" aria-hidden="true">
+        <path d="M82 0 H118 L168 110 H32 Z" fill="#f6e6d8" opacity=".7"/>
+        <ellipse cx="100" cy="110" rx="70" ry="8" fill="#f2d6c2"/>
+        <path d="M100 56 V106 M86 107 H114" stroke="#0d0d0d" stroke-width="3" stroke-linecap="round"/>
+        <rect x="93" y="34" width="14" height="24" rx="7" fill="#0d0d0d"/>
+        <text x="132" y="44" font-size="22" font-weight="600" fill="#d97757">?</text>
+      </svg>
+      <p class="label">尚未公布</p>
+      <p>名單確定後會更新在這裡。</p>
     </div>
   </section>
 </main>
@@ -358,6 +506,17 @@
     box.innerHTML = yt
       ? `<iframe src="https://www.youtube.com/embed/${yt[1]}?rel=0" title="ACE Pitch Day" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
       : `<video src="${VIDEO}" controls playsinline muted preload="metadata"></video>`;
+  })();
+
+  (function timeline() {
+    const tl = document.getElementById("timeline");
+    if (!tl) return;
+    const play = () => tl.classList.add("is-on");
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return play();
+    document.documentElement.classList.add("js");
+    new IntersectionObserver((entries, io) => {
+      if (entries.some(e => e.isIntersecting)) { play(); io.disconnect(); }
+    }, { threshold: 0.4 }).observe(tl);
   })();
 </script>
 </body>

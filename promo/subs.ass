@@ -1,0 +1,25 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 0
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: ZH,Heiti TC,46,&H00FFFFFF,&H00FFFFFF,&H70141414,&H00000000,1,0,0,0,100,100,1,0,3,16,0,2,120,120,128,1
+Style: EN,Helvetica Neue,32,&H00FFFFFF,&H00FFFFFF,&H70141414,&H00000000,0,0,0,0,100,100,0.5,0,3,12,0,2,120,120,60,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.70,0:00:05.17,ZH,,0,0,0,,{\fad(150,150)}三分鐘，一個作品，說服整間教室。
+Dialogue: 0,0:00:00.70,0:00:05.17,EN,,0,0,0,,{\fad(150,150)}Three minutes. One project. Win over the whole room.
+Dialogue: 0,0:00:05.42,0:00:11.84,ZH,,0,0,0,,{\fad(150,150)}在 ACE，做出來只是一半；讓別人願意投資你，才是另一半。
+Dialogue: 0,0:00:05.42,0:00:11.84,EN,,0,0,0,,{\fad(150,150)}At ACE, building it is only half the job. Getting people to back it is the other half.
+Dialogue: 0,0:00:12.09,0:00:18.76,ZH,,0,0,0,,{\fad(150,150)}當天每個人會拿到一個信封，裡面有多少資本，只有你自己知道。
+Dialogue: 0,0:00:12.09,0:00:18.76,EN,,0,0,0,,{\fad(150,150)}Everyone gets an envelope. Only you know how much capital is inside.
+Dialogue: 0,0:00:19.01,0:00:26.47,ZH,,0,0,0,,{\fad(150,150)}聽完所有發表，把錢投給你最看好的作品。唯一的規則：不能投給自己。
+Dialogue: 0,0:00:19.01,0:00:26.47,EN,,0,0,0,,{\fad(150,150)}After every pitch, invest in the project you believe in. One rule: never your own.
+Dialogue: 0,0:00:26.71,0:00:31.57,ZH,,0,0,0,,{\fad(150,150)}募資最高的人，獨得 Claude Team Premium 一個月。
+Dialogue: 0,0:00:26.71,0:00:31.57,EN,,0,0,0,,{\fad(150,150)}The top-funded founder wins one month of Claude Team Premium.
+Dialogue: 0,0:00:31.81,0:00:36.46,ZH,,0,0,0,,{\fad(150,150)}ACE Pitch Day，十月十五日，社課見。
+Dialogue: 0,0:00:31.81,0:00:36.46,EN,,0,0,0,,{\fad(150,150)}ACE Pitch Day. October 15. See you there.
