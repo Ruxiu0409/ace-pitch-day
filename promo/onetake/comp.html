@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>ACE Pitch Day — one take</title>
+<style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--ground)}
+#gl{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#subs{position:absolute;left:0;right:0;bottom:58px;text-align:center;opacity:0;pointer-events:none}
+#subEn{font-family:var(--text);font-weight:600;font-size:38px;letter-spacing:-0.01em;color:var(--ink);text-shadow:0 0 18px rgba(242,239,233,.95),0 0 4px rgba(242,239,233,.9)}
+#subZh{margin-top:8px;font-family:"PingFang TC","Heiti TC",sans-serif;font-weight:500;font-size:30px;color:var(--mute);text-shadow:0 0 14px rgba(242,239,233,.95),0 0 3px rgba(242,239,233,.9)}
+#bubble{position:absolute;left:0;top:0;opacity:0;transform-origin:40px 120px;padding:18px 28px 16px;background:var(--card);border-radius:28px;box-shadow:0 10px 30px rgba(27,26,24,.14);white-space:nowrap}
+#bubble:after{content:"";position:absolute;left:30px;bottom:-14px;border:14px solid transparent;border-top-color:var(--card);border-bottom:0}
+#bubEn{font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-0.02em;color:var(--ink)}
+#bubZh{margin-top:4px;font-family:"PingFang TC","Heiti TC",sans-serif;font-size:24px;color:var(--accent)}
+#hud{position:absolute;right:14px;top:10px;font:13px monospace;color:#c00;display:none}
+</style></head>
+<body>
+<canvas id="gl" width="1920" height="1080"></canvas>
+<div id="bubble"><div id="bubEn"></div><div id="bubZh"></div></div>
+<div id="subs"><div id="subEn"></div><div id="subZh"></div></div>
+<div id="hud"></div>
+<script src="motion.js"></script>
+<script src="look.js"></script>
+<script src="comp.js"></script>
+</body></html>

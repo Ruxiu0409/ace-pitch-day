@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>ACE 幣 A4 印刷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Noto+Sans+TC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* A4 直式，每頁 2 欄 × 6 列 = 12 張，每張 95 × 45 mm */
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body {
+    font-family: "Inter", "PingFang TC", "Noto Sans TC", sans-serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page {
+    width: 210mm; height: 297mm;
+    padding: 13.5mm 10mm;
+    display: grid;
+    grid-template-columns: repeat(2, 95mm);
+    grid-template-rows: repeat(6, 45mm);
+    break-after: page;
+    position: relative;
+  }
+  .page:last-child { break-after: auto; }
+
+  /* 裁切線：每張外框用淺灰虛線 */
+  .cell { outline: 0.2mm dashed #bbb; padding: 1.5mm; }
+
+  .bill {
+    --ink: #2f4a2a; --paper1: #eef3ea; --paper2: #d5e2cf;
+    width: 100%; height: 100%;
+    position: relative; overflow: hidden;
+    border-radius: 2mm;
+    color: var(--ink);
+    background:
+      repeating-radial-gradient(circle at 18% 120%, transparent 0 1.6mm, color-mix(in srgb, var(--ink) 9%, transparent) 1.6mm 1.8mm),
+      repeating-radial-gradient(circle at 82% -20%, transparent 0 1.6mm, color-mix(in srgb, var(--ink) 9%, transparent) 1.6mm 1.8mm),
+      linear-gradient(135deg, var(--paper1), var(--paper2));
+    padding: 4mm 5mm;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .bill::before {
+    content: ""; position: absolute; inset: 2mm;
+    border: 0.35mm solid color-mix(in srgb, var(--ink) 45%, transparent);
+    border-radius: 1.2mm; pointer-events: none;
+  }
+  .bill::after {
+    content: "♠"; position: absolute;
+    right: -3mm; bottom: -9mm;
+    font-size: 34mm; line-height: 1;
+    color: color-mix(in srgb, var(--ink) 8%, transparent);
+    pointer-events: none;
+  }
+  .row { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .top { font-size: 2.6mm; font-weight: 700; letter-spacing: 0.14em; }
+  .no { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .amount {
+    position: relative; z-index: 1;
+    text-align: center; line-height: 1;
+    font-size: 10.5mm; font-weight: 700; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .amount small { display: block; margin-top: 1.2mm; font-size: 2.4mm; font-weight: 600; letter-spacing: 0.3em; opacity: 0.75; }
+  .bottom { font-size: 2.6mm; font-weight: 700; letter-spacing: 0.12em; }
+  .bottom .date { font-weight: 500; letter-spacing: 0.06em; opacity: 0.75; }
+  .seal { font-size: 5mm; line-height: 1; }
+
+  /* 面額配色 */
+  .d100k { --ink: #2f4a2a; --paper1: #eef3ea; --paper2: #d3e1cc; }
+  .d500k { --ink: #1f3d75; --paper1: #eaf0fb; --paper2: #cddcf5; }
+  .d1m   { --ink: #7a3519; --paper1: #fbefe7; --paper2: #f1d3c0; }
+  .d1m .seal { color: #d97757; }
+
+  @media screen {
+    body { background: #ddd; padding: 10mm 0; }
+    .page { margin: 0 auto 10mm; background: #fff; box-shadow: 0 2mm 8mm rgba(0,0,0,.15); }
+  }
+</style>
+</head>
+<body>
+<main id="sheets"></main>
+<script>
+  // 面額與每種印幾頁（每頁 12 張）
+  const DENOMS = [
+    { cls: "d100k", amount: "100,000", label: "拾萬 ACE 幣", pages: 1 },
+    { cls: "d500k", amount: "500,000", label: "伍拾萬 ACE 幣", pages: 1 },
+    { cls: "d1m",   amount: "1,000,000", label: "壹佰萬 ACE 幣", pages: 1 },
+  ];
+  const PER_PAGE = 12;
+  const root = document.getElementById("sheets");
+  let serial = 1;
+  for (const d of DENOMS) {
+    for (let p = 0; p < d.pages; p++) {
+      const page = document.createElement("section");
+      page.className = "page";
+      for (let i = 0; i < PER_PAGE; i++) {
+        const no = String(serial++).padStart(4, "0");
+        page.insertAdjacentHTML("beforeend", `
+          <div class="cell"><div class="bill ${d.cls}">
+            <div class="row top"><span>ACE CLUB</span><span class="no">NO. ${no}</span></div>
+            <div class="amount">${d.amount}<small>${d.label}</small></div>
+            <div class="row bottom"><span>天使輪 <span class="date">2026.10.15</span></span><span class="seal">♠</span></div>
+          </div></div>`);
+      }
+      root.appendChild(page);
+    }
+  }
+</script>
+</body>
+</html>
