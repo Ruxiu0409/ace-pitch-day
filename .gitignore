@@ -2,3 +2,10 @@ promo/frames/
 promo/frames2/
 promo/vo/*.aiff
 promo/vo2/*.aiff
+promo/onetake/frames/
+promo/onetake/node_modules/
+promo/onetake/mix.wav
+promo/onetake/master.wav
+promo/onetake/vo/aud/
+promo/onetake/stills*.png
+promo/onetake/draft.mp4

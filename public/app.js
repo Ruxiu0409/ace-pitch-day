@@ -1,5 +1,5 @@
 // Fill in when the event video is ready: a YouTube link or an mp4 path (e.g. "/video.mp4").
-const VIDEO = "";
+const VIDEO = "/video.mp4";
 
 (function mountVideo() {
   if (!VIDEO) return;
@@ -7,7 +7,7 @@ const VIDEO = "";
   const yt = VIDEO.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
   box.innerHTML = yt
     ? `<iframe src="https://www.youtube.com/embed/${yt[1]}?rel=0" title="ACE Pitch Day" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-    : `<video src="${VIDEO}" controls playsinline muted preload="metadata"></video>`;
+    : `<video src="${VIDEO}" poster="/video-poster.jpg" controls playsinline preload="metadata"></video>`;
 })();
 
 // Keep Chinese clauses whole: only allow line breaks after punctuation.
